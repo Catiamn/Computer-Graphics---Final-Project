@@ -1,0 +1,74 @@
+#pragma kernel CSMain
+
+// Buffer for vertices
+RWStructuredBuffer<float3> verticesBuffer;
+RWStructuredBuffer<float3> normalsBuffer;
+RWStructuredBuffer<float3> deformedVerticesBuffer;
+RWStructuredBuffer<float> maxDeformationBuffer;
+
+// Deformation parameters
+float _Time;
+float _Amplitude;
+float _Frequency;
+float _Speed;
+float3 _DeformationCenter;
+float _Radius;
+
+
+// For liquids or semi slimy material
+bool _IsWaving;
+// Like cloth
+bool _IsCloth;
+
+
+[numthreads(64, 1, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    uint idx = id.x;
+    
+    // Get original vertex position
+    float3 originalVertex = verticesBuffer[idx];
+    float3 normal = normalsBuffer[idx];
+    
+    float currentMaxDeformation = maxDeformationBuffer[idx];
+    
+    // Calculate distance from deformation center
+    float distanceToCenter = length(originalVertex - _DeformationCenter);
+    
+    
+    // Apply deformation if within radius
+    if (distanceToCenter < _Radius)
+    {
+        // Calculate falloff (soft edge)
+        float falloff = 1.0 - smoothstep(0.0, _Radius, distanceToCenter);
+        
+        float wave = 1;
+        if (_IsWaving)
+        {
+            wave = sin(_Frequency * originalVertex.x + _Time * _Speed) *
+                     sin(_Frequency * originalVertex.z + _Time * _Speed);
+        }
+        
+        // Only update if new deformation is greater than current
+        float potentialDeformation = wave * _Amplitude * falloff;
+        if (abs(potentialDeformation) > abs(currentMaxDeformation))
+        {
+            currentMaxDeformation = potentialDeformation;
+        }
+    }
+    
+    if (_IsCloth)
+    {
+        // Store the maximum deformation ever reached
+        maxDeformationBuffer[idx] = currentMaxDeformation;
+        // Apply deformation
+        deformedVerticesBuffer[idx] = originalVertex + normal * currentMaxDeformation;
+    }
+    else
+    {
+        // Store the maximum imverse deformation ever reached
+        maxDeformationBuffer[idx] = -abs(currentMaxDeformation);
+        // Apply inverse deformation
+        deformedVerticesBuffer[idx] = originalVertex + normal * -abs(currentMaxDeformation);
+    }
+}

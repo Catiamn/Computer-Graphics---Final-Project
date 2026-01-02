@@ -37,6 +37,9 @@
 # VS Code
 .vscode/
 
+# Rider
+.idea/
+
 # Visual Studio newer solution format
 *.slnx
 
