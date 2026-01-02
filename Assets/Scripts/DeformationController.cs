@@ -18,9 +18,10 @@ public class DeformationController : MonoBehaviour
     [SerializeField] private float recoveryRate = 0.5f;
     private float _maxDeformation;
     
-    [Header("Performance")]
+    [Header("Wave Settings")]
     [SerializeField] private bool updateContinuously = true;
     [Range(1, 60)] public int updateRate = 60;
+    private float _timeAccumulator;
     
     // Compute shader resources
     [SerializeField] private ComputeShader deformationComputeShader;
@@ -40,7 +41,7 @@ public class DeformationController : MonoBehaviour
     private Renderer _meshRenderer;
     
     // Timing
-    private float _timeAccumulator;
+    
     
     void Start()
     {
@@ -96,7 +97,7 @@ public class DeformationController : MonoBehaviour
         _meshRenderer.SetPropertyBlock(_propertyBlock);
     }
     
-    void Update()
+    void FixedUpdate()
     {
         if (!updateContinuously)
             return;

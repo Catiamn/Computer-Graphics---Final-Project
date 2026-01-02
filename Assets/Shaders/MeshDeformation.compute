@@ -13,8 +13,6 @@ float _Frequency;
 float _Speed;
 float3 _DeformationCenter;
 float _Radius;
-
-
 // For liquids or semi slimy material
 bool _IsWaving;
 // Like cloth
