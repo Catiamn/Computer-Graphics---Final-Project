@@ -13,6 +13,7 @@ public class DeformationController : MonoBehaviour
     [Header("Mesh Type")]
     [SerializeField] private bool isWaving;
     [SerializeField] private bool isCloth;
+    [SerializeField] private bool isDigging;
     
     [Header("Mesh Recovery")]
     [SerializeField] private float recoveryRate = 0.5f;
@@ -43,7 +44,7 @@ public class DeformationController : MonoBehaviour
     // Timing
     
     
-    void Start()
+    private void Start()
     {
         _maxDeformation = amplitude;
         InitializeMeshData();
@@ -51,7 +52,7 @@ public class DeformationController : MonoBehaviour
         InitializeMaterial();
     }
     
-    void InitializeMeshData()
+    private void InitializeMeshData()
     {
         MeshFilter meshFilter = GetComponent<MeshFilter>();
         _originalMesh = meshFilter.mesh;
@@ -67,7 +68,7 @@ public class DeformationController : MonoBehaviour
         _meshRenderer = GetComponent<Renderer>();
     }
     
-    void InitializeComputeBuffers()
+    private void InitializeComputeBuffers()
     {
         int vertexCount = _originalVertices.Length;
         
@@ -87,7 +88,7 @@ public class DeformationController : MonoBehaviour
         _maxDeformationBuffer.SetData(initialDeformation);
     }
     
-    void InitializeMaterial()
+    private void InitializeMaterial()
     {
         _propertyBlock = new MaterialPropertyBlock();
         _meshRenderer.GetPropertyBlock(_propertyBlock);
@@ -97,7 +98,7 @@ public class DeformationController : MonoBehaviour
         _meshRenderer.SetPropertyBlock(_propertyBlock);
     }
     
-    void FixedUpdate()
+    private void FixedUpdate()
     {
         if (!updateContinuously)
             return;
@@ -153,7 +154,7 @@ public class DeformationController : MonoBehaviour
         UpdateMeshVertices();
     }
     
-    void UpdateMeshVertices()
+    private void UpdateMeshVertices()
     {
         // Get deformed vertices from GPU
         Vector3[] deformedVertices = new Vector3[_originalVertices.Length];
@@ -168,14 +169,15 @@ public class DeformationController : MonoBehaviour
     }
     
     // Public method to trigger deformation manually
-    public void TriggerDeformationAtPoint(Vector3 point, float force)
+    public void TriggerDeformationAtPoint(Vector3 point, float force, float area)
     {
         deformationCenter = transform.InverseTransformPoint(point);
         amplitude = force;
+        radius = area;
         ExecuteDeformation();
     }
     
-    void OnDestroy()
+    private void OnDestroy()
     {
         // Release compute buffers to prevent memory leaks
         _verticesBuffer?.Release();
@@ -184,7 +186,7 @@ public class DeformationController : MonoBehaviour
         _maxDeformationBuffer?.Release();
     }
     
-    void OnDrawGizmosSelected()
+    private void OnDrawGizmosSelected()
     {
         // Visualize deformation center
         Gizmos.color = Color.red;

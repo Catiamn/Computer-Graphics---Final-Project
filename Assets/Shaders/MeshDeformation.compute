@@ -17,6 +17,8 @@ float _Radius;
 bool _IsWaving;
 // Like cloth
 bool _IsCloth;
+// For digging effect
+bool _IsDigging;
 
 
 [numthreads(64, 1, 1)]
@@ -40,22 +42,32 @@ void CSMain(uint3 id : SV_DispatchThreadID)
         // Calculate falloff (soft edge)
         float falloff = 1.0 - smoothstep(0.0, _Radius, distanceToCenter);
         
-        float wave = 1;
         if (_IsWaving)
         {
-            wave = sin(_Frequency * originalVertex.x + _Time * _Speed) *
+            float wave = sin(_Frequency * originalVertex.x + _Time * _Speed) *
                      sin(_Frequency * originalVertex.z + _Time * _Speed);
+
+            float3 deformation = normal * wave * _Amplitude * falloff;
+
+            deformedVerticesBuffer[idx] = originalVertex - abs(deformation);
+
+            return;
         }
         
         // Only update if new deformation is greater than current
-        float potentialDeformation = wave * _Amplitude * falloff;
+        float potentialDeformation = _Amplitude * falloff;
         if (abs(potentialDeformation) > abs(currentMaxDeformation))
         {
             currentMaxDeformation = potentialDeformation;
         }
-    }
     
     if (_IsCloth)
+    {
+        float3 deformation = normal * _Amplitude * falloff;
+
+        deformedVerticesBuffer[idx] = originalVertex + abs(deformation);
+    }
+    else if (_IsDigging)
     {
         // Store the maximum deformation ever reached
         maxDeformationBuffer[idx] = currentMaxDeformation;
@@ -69,4 +81,5 @@ void CSMain(uint3 id : SV_DispatchThreadID)
         // Apply inverse deformation
         deformedVerticesBuffer[idx] = originalVertex + normal * -abs(currentMaxDeformation);
     }
+}
 }
