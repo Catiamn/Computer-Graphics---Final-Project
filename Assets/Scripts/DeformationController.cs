@@ -41,9 +41,6 @@ public class DeformationController : MonoBehaviour
     private MaterialPropertyBlock _propertyBlock;
     private Renderer _meshRenderer;
     
-    // Timing
-    
-    
     private void Start()
     {
         _maxDeformation = amplitude;
