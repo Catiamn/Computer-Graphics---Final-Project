@@ -364,6 +364,7 @@ MonoBehaviour:
   deformator: {fileID: 1717988973}
   deformationForce: 0.02
   radius: 0.02
+  deformationPos: {fileID: 0}
 --- !u!1 &544662390
 GameObject:
   m_ObjectHideFlags: 0
@@ -533,7 +534,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 5e81e420692b01140906e754aa8fd777, type: 2}
+  - {fileID: 2100000, guid: 0e462f3a895d60b40b1bea7b863047a6, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -635,8 +636,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   deformator: {fileID: 1200060147}
-  deformationForce: 1
-  radius: 1
+  deformationForce: 0.5
+  radius: 0.5
+  deformationPos: {fileID: 0}
 --- !u!135 &1316177321
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -944,7 +946,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: eb14faad1ba0f3b46ac8514623a954ab, type: 2}
+  - {fileID: 2100000, guid: 0e462f3a895d60b40b1bea7b863047a6, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

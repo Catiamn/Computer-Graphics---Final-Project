@@ -174,6 +174,7 @@ public class DeformationController : MonoBehaviour
         deformationCenter = transform.InverseTransformPoint(point);
         amplitude = force;
         radius = area;
+        //deformationCenter = deformationPos;
         ExecuteDeformation();
     }
     

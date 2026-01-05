@@ -22,9 +22,9 @@ Shader "Custom/SnowTerrain"
             #pragma fragment frag
             #include "UnityCG.cginc"
             
-            struct appdata
+            struct Attributes
             {
-                float4 vertex : POSITION;
+                float4 vertexPOS : POSITION;
                 float2 uv : TEXCOORD0;
             };
             
@@ -73,12 +73,12 @@ Shader "Custom/SnowTerrain"
                 return outMinMax.x + (value - inMinMax.x) * (outMinMax.y - outMinMax.x) / (inMinMax.y - inMinMax.x);
             }
             
-            v2f vert(appdata v)
+            v2f vert(Attributes v)
             {
                 v2f o;
                 
                 // Get world position
-                float3 worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
+                float3 worldPos = mul(unity_ObjectToWorld, v.vertexPOS).xyz;
                 
                 // Split world pos into xy, xz, yz and add them (triplanar approach)
                 float2 xy = worldPos.xy;
@@ -108,11 +108,11 @@ Shader "Custom/SnowTerrain"
                 float subtractResult = clampedHeight - colorMultiplied;
                 
                 // Get object position Y and add to subtract result
-                float objPosY = v.vertex.y;
+                float objPosY = v.vertexPOS.y;
                 float newY = objPosY + subtractResult;
                 
                 // Combine new Y with original X and Z of object position
-                float3 displacedPos = float3(v.vertex.x, newY, v.vertex.z);
+                float3 displacedPos = float3(v.vertexPOS.x, newY, v.vertexPOS.z);
                 
                 // Remap the new Y for lerp (using height range as bounds)
                 float lerpT = remap(newY, float2(_HeightMin, _HeightMax), float2(0, 1));
@@ -121,7 +121,7 @@ Shader "Custom/SnowTerrain"
                 // Calculate final position
                 o.pos = UnityObjectToClipPos(float4(displacedPos, 1.0));
                 o.worldPos = worldPos;
-                o.objPos = v.vertex.xyz;
+                o.objPos = v.vertexPOS.xyz;
                 o.uv = v.uv;
                 
                 return o;
