@@ -124,10 +124,10 @@ Material:
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
     - _Surface: 0
-    - _TessellationBias: 1.86
-    - _TessellationDeformThreshold: 9.77
-    - _TessellationFactor: 0.12
-    - _TessellationSmoothing: 10.2
+    - _TessellationBias: 294.4
+    - _TessellationDeformThreshold: 133.7
+    - _TessellationFactor: 259.96
+    - _TessellationSmoothing: 790.91
     - _WorkflowMode: 1
     - _ZWrite: 1
     m_Colors:
