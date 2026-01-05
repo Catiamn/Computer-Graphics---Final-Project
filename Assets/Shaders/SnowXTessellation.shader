@@ -362,42 +362,24 @@ Shader "Custom/TessellatedSnowTerrain"
                 }
                 else
                 {
-                    // Calculate deformation amount for each vertex
-                    float deform0 = CalculateDeformationAmount(patch[0].positionWS, patch[0].positionOS, patch[0].uv);
-                    float deform1 = CalculateDeformationAmount(patch[1].positionWS, patch[1].positionOS, patch[1].uv);
-                    float deform2 = CalculateDeformationAmount(patch[2].positionWS, patch[2].positionOS, patch[2].uv);
-                    
-                    // Calculate multipliers based on whether deformation exceeds threshold
-                    float mult0 = deform0 > _TessellationDeformThreshold ? 1.0 : 0.0;
-                    float mult1 = deform1 > _TessellationDeformThreshold ? 1.0 : 0.0;
-                    float mult2 = deform2 > _TessellationDeformThreshold ? 1.0 : 0.0;
-                    
-                    // Apply multipliers to edges (edge tessellates if either vertex is deformed)
-                    float edgeMult0 = max(mult1, mult2); // Edge between vertex 1 and 2
-                    float edgeMult1 = max(mult2, mult0); // Edge between vertex 2 and 0
-                    float edgeMult2 = max(mult0, mult1); // Edge between vertex 0 and 1
-                    
-                    // Calculate tessellation factors, multiplied by deformation
-                    f.edge[0] = EdgeTessellationFactor(_TessellationFactor, _TessellationBias, edgeMult0,
+                    // Always tessellate - no conditional checks
+                    // This ensures the mesh has enough geometry for compute shader deformation
+                    f.edge[0] = EdgeTessellationFactor(_TessellationFactor, _TessellationBias, 1.0,
                         patch[1].positionWS, patch[1].positionCS, patch[2].positionWS, patch[2].positionCS);
-                    f.edge[1] = EdgeTessellationFactor(_TessellationFactor, _TessellationBias, edgeMult1,
+                    f.edge[1] = EdgeTessellationFactor(_TessellationFactor, _TessellationBias, 1.0,
                         patch[2].positionWS, patch[2].positionCS, patch[0].positionWS, patch[0].positionCS);
-                    f.edge[2] = EdgeTessellationFactor(_TessellationFactor, _TessellationBias, edgeMult2,
+                    f.edge[2] = EdgeTessellationFactor(_TessellationFactor, _TessellationBias, 1.0,
                         patch[0].positionWS, patch[0].positionCS, patch[1].positionWS, patch[1].positionCS);
                     f.inside = (f.edge[0] + f.edge[1] + f.edge[2]) / 3.0;
                     
-                    // Only calculate Bezier points if tessellation is happening
-                    if (f.inside > 1.0)
-                    {
-                        CalculateBezierControlPoints(f.bezierPoints, 
-                            patch[0].positionWS, patch[0].normalWS, 
-                            patch[1].positionWS, patch[1].normalWS, 
-                            patch[2].positionWS, patch[2].normalWS);
-                        CalculateBezierNormalPoints(f.bezierPoints, 
-                            patch[0].positionWS, patch[0].normalWS, 
-                            patch[1].positionWS, patch[1].normalWS, 
-                            patch[2].positionWS, patch[2].normalWS);
-                    }
+                    CalculateBezierControlPoints(f.bezierPoints, 
+                        patch[0].positionWS, patch[0].normalWS, 
+                        patch[1].positionWS, patch[1].normalWS, 
+                        patch[2].positionWS, patch[2].normalWS);
+                    CalculateBezierNormalPoints(f.bezierPoints, 
+                        patch[0].positionWS, patch[0].normalWS, 
+                        patch[1].positionWS, patch[1].normalWS, 
+                        patch[2].positionWS, patch[2].normalWS);
                 }
                 
                 return f;

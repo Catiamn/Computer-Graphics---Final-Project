@@ -76,7 +76,7 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     }
     else
     {
-        // Store the maximum imverse deformation ever reached
+        // Store the maximum inverse deformation ever reached
         maxDeformationBuffer[idx] = -abs(currentMaxDeformation);
         // Apply inverse deformation
         deformedVerticesBuffer[idx] = originalVertex + normal * -abs(currentMaxDeformation);
