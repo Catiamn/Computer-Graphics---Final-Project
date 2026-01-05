@@ -1,5 +1,6 @@
 Shader "Custom/TessellatedSnowTerrain"
 {
+    // junçao do TesselationTerrain.shader e do SnowShader.shader com adaptaçoes para funcionarem juntos
     Properties
     {
         // Tessellation properties
@@ -40,9 +41,9 @@ Shader "Custom/TessellatedSnowTerrain"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
             
-            // ============================================================================
+            
             // PROPERTIES
-            // ============================================================================
+            
             float _TessellationFactor;
             float _TessellationBias;
             float _TessellationDeformThreshold;
@@ -57,9 +58,9 @@ Shader "Custom/TessellatedSnowTerrain"
             float4 _BottomColor;
             float4 _TopColor;
             
-            // ============================================================================
+            
             // STRUCTS
-            // ============================================================================
+            
             struct Attributes
             {
                 float3 positionOS : POSITION;
@@ -97,9 +98,9 @@ Shader "Custom/TessellatedSnowTerrain"
                 float height : TEXCOORD4;
             };
             
-            // ============================================================================
+            
             // NOISE FUNCTIONS (from Snow Terrain shader)
-            // ============================================================================
+            
             float hash(float2 p)
             {
                 float3 p3 = frac(float3(p.xyx) * 0.1031);
@@ -126,9 +127,9 @@ Shader "Custom/TessellatedSnowTerrain"
                 return outMinMax.x + (value - inMinMax.x) * (outMinMax.y - outMinMax.x) / (inMinMax.y - inMinMax.x);
             }
             
-            // ============================================================================
+            
             // SNOW DISPLACEMENT FUNCTION
-            // ============================================================================
+            
             float CalculateSnowDisplacement(float3 worldPos, float3 objPos, float2 uv)
             {
                 // Triplanar noise sampling
@@ -152,9 +153,9 @@ Shader "Custom/TessellatedSnowTerrain"
                 return subtractResult;
             }
             
-            // ============================================================================
+            
             // UTILITY FUNCTIONS
-            // ============================================================================
+            
             float3 BarycentricInterpolate(float3 bary, float3 a, float3 b, float3 c)
             {
                 return bary.x * a + bary.y * b + bary.z * c;
@@ -202,9 +203,9 @@ Shader "Custom/TessellatedSnowTerrain"
                 return allOutside || ShouldBackFaceCull(p0PositionCS, p1PositionCS, p2PositionCS);
             }
             
-            // ============================================================================
+            
             // BEZIER SURFACE CALCULATIONS
-            // ============================================================================
+           
             float3 CalculateBezierControlPoint(float3 p0PositionWS, float3 aNormalWS, float3 p1PositionWS, float3 bNormalWS)
             {
                 float w = dot(p1PositionWS - p0PositionWS, aNormalWS);
@@ -287,9 +288,9 @@ Shader "Custom/TessellatedSnowTerrain"
                 return normalize(lerp(flatNormalWS, smoothedNormalWS, smoothing));
             }
             
-            // ============================================================================
+           
             // TESSELLATION FACTOR CALCULATION
-            // ============================================================================
+           
             float EdgeTessellationFactor(float scale, float bias, float multiplier, 
                 float3 p0PositionWS, float4 p0PositionCS, 
                 float3 p1PositionWS, float4 p1PositionCS)
@@ -312,9 +313,9 @@ Shader "Custom/TessellatedSnowTerrain"
                 return invertedRed;
             }
             
-            // ============================================================================
+       
             // VERTEX SHADER
-            // ============================================================================
+           
             TessellationControl vert(Attributes input)
             {
                 TessellationControl output;
@@ -337,9 +338,9 @@ Shader "Custom/TessellatedSnowTerrain"
                 return output;
             }
             
-            // ============================================================================
+           
             // HULL SHADER
-            // ============================================================================
+          
             [domain("tri")]
             [outputcontrolpoints(3)]
             [outputtopology("triangle_cw")]
@@ -385,9 +386,9 @@ Shader "Custom/TessellatedSnowTerrain"
                 return f;
             }
             
-            // ============================================================================
+          
             // DOMAIN SHADER
-            // ============================================================================
+          
             [domain("tri")]
             Interpolators dom(
                 TessellationFactors factors, 
@@ -430,9 +431,9 @@ Shader "Custom/TessellatedSnowTerrain"
                 return output;
             }
             
-            // ============================================================================
+    
             // FRAGMENT SHADER
-            // ============================================================================
+       
             half4 frag(Interpolators input) : SV_Target
             {
                 float3 normalWS = normalize(input.normalWS);

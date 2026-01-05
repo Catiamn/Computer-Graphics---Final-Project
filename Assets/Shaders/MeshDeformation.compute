@@ -1,47 +1,49 @@
 #pragma kernel CSMain
 
-// Buffer for vertices
-RWStructuredBuffer<float3> verticesBuffer;
-RWStructuredBuffer<float3> normalsBuffer;
-RWStructuredBuffer<float3> deformedVerticesBuffer;
-RWStructuredBuffer<float> maxDeformationBuffer;
+//compute shader responsavel por calcular a deformacao dos vertices da mesh no gpu
+RWStructuredBuffer<float3> verticesBuffer; //vertices originais da mesh
+RWStructuredBuffer<float3> normalsBuffer; //normais dos vertices da mesh
+RWStructuredBuffer<float3> deformedVerticesBuffer; //vertices deformados da mesh
+RWStructuredBuffer<float> maxDeformationBuffer; //deformacao maxima 
 
-// Deformation parameters
+//parametros de deformaçao passados pelo script DeformationController.cs
 float _Time;
 float _Amplitude;
 float _Frequency;
 float _Speed;
 float3 _DeformationCenter;
 float _Radius;
-// For liquids or semi slimy material
-bool _IsWaving;
-// Like cloth
-bool _IsCloth;
-// For digging effect
-bool _IsDigging;
+
+//modos de deformaçao
+bool _IsWaving; //efeito tipo liquidos/ondas
+bool _IsCloth; //efeito tipo tecido (empurra para fora)
+bool _IsDigging; //efeito tipo escavar (puxa para dentro)
 
 
 [numthreads(64, 1, 1)]
 void CSMain(uint3 id : SV_DispatchThreadID)
 {
+    //indice dos vertices procesados neste thread
     uint idx = id.x;
     
-    // Get original vertex position
+    //lê os dados dos buffers
     float3 originalVertex = verticesBuffer[idx];
     float3 normal = normalsBuffer[idx];
     
+    //lê a deformacao maxima atual (pode ser 0 no inicio)
     float currentMaxDeformation = maxDeformationBuffer[idx];
     
-    // Calculate distance from deformation center
+    // distancia do vertice ao centro da deformacao
     float distanceToCenter = length(originalVertex - _DeformationCenter);
     
     
-    // Apply deformation if within radius
+    //so aplica a deformacao se o vertice estiver dentro do raio de influencia
     if (distanceToCenter < _Radius)
     {
-        // Calculate falloff (soft edge)
+        //falloff suave para as bordas, 0 fora do raio e 1 no centro (soft edge)
         float falloff = 1.0 - smoothstep(0.0, _Radius, distanceToCenter);
         
+        //efeito de onda/liquido, deslocamento periodico dependendo do x/z e do tempo
         if (_IsWaving)
         {
             float wave = sin(_Frequency * originalVertex.x + _Time * _Speed) *
@@ -49,36 +51,45 @@ void CSMain(uint3 id : SV_DispatchThreadID)
 
             float3 deformation = normal * wave * _Amplitude * falloff;
 
+            //escreve o vertice deformado, subtraindo o valor absoluto para "afundar" a superficie
             deformedVerticesBuffer[idx] = originalVertex - abs(deformation);
 
+            //termina o procesamento 
             return;
         }
         
-        // Only update if new deformation is greater than current
+        //para os outros modos, calculamos a deformacao potencial
         float potentialDeformation = _Amplitude * falloff;
+        //só atualiza se for maior que a deformacao maxima atual
         if (abs(potentialDeformation) > abs(currentMaxDeformation))
         {
+            //atualiza a deformacao maxima atual
             currentMaxDeformation = potentialDeformation;
         }
     
+     // efeito de tecido (empurra vertices para fora)
     if (_IsCloth)
     {
+        //aplica a deformacao
         float3 deformation = normal * _Amplitude * falloff;
 
+        //armazena a deformacao maxima atingida
         deformedVerticesBuffer[idx] = originalVertex + abs(deformation);
     }
+        // efeito de escavar (puxa vertices para dentro)
     else if (_IsDigging)
     {
-        // Store the maximum deformation ever reached
+        //guarda a maxima deformacao 
         maxDeformationBuffer[idx] = currentMaxDeformation;
-        // Apply deformation
+        //aplica a deformacao
         deformedVerticesBuffer[idx] = originalVertex + normal * currentMaxDeformation;
     }
+        //modo default (sem efeitos)
     else
     {
-        // Store the maximum inverse deformation ever reached
+        //guarda a deformacao negativa
         maxDeformationBuffer[idx] = -abs(currentMaxDeformation);
-        // Apply inverse deformation
+        //aplica a deformacao
         deformedVerticesBuffer[idx] = originalVertex + normal * -abs(currentMaxDeformation);
     }
 }

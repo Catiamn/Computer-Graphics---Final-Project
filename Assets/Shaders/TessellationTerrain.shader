@@ -30,17 +30,13 @@ Shader "Custom/TessellationTerrain"
             
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             
-            // ============================================================================
-            // PROPERTIES
-            // ============================================================================
+            //variaveis controladas via bloco Properties
             float _TessellationFactor;
             float _TessellationBias;
             float _TessellationDeformThreshold;
             float _TessellationSmoothing;
             
-            // ============================================================================
-            // STRUCTS
-            // ============================================================================
+            // sados passados do vert para o hull/patch
             struct Attributes
             {
                 float3 positionOS : POSITION;
@@ -49,6 +45,7 @@ Shader "Custom/TessellationTerrain"
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
             
+            // fatores de tessellacao e pontos Bezier para suavizacao
             struct TessellationControl
             {
                 float4 positionCS : SV_POSITION;
@@ -58,6 +55,7 @@ Shader "Custom/TessellationTerrain"
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
             
+            //dados para o fragment shader
             struct TessellationFactors
             {
                 float edge[3] : SV_TessFactor;
@@ -72,9 +70,7 @@ Shader "Custom/TessellationTerrain"
                 float3 normalWS : TEXCOORD1;
             };
             
-            // ============================================================================
-            // UTILITY FUNCTIONS
-            // ============================================================================
+            // funçoes auxiliars
             float3 BarycentricInterpolate(float3 bary, float3 a, float3 b, float3 c)
             {
                 return bary.x * a + bary.y * b + bary.z * c;
@@ -87,6 +83,7 @@ Shader "Custom/TessellationTerrain"
                        p.z < lower.z || p.z > higher.z;
             }
             
+            //testa se um ponto esta fora do frustum de visao
             bool IsPointOutOfFrustum(float4 positionCS, float tolerance = 0)
             {
                 float3 culling = positionCS.xyz;
@@ -96,6 +93,7 @@ Shader "Custom/TessellationTerrain"
                 return IsOutOfBounds(culling, lowerBounds, higherBounds);
             }
             
+            //determina se o triangulo deve ser backface culled
             bool ShouldBackFaceCull(float4 p0PositionCS, float4 p1PositionCS, float4 p2PositionCS, float tolerance = 0)
             {
                 float3 point0 = p0PositionCS.xyz / p0PositionCS.w;
@@ -109,6 +107,7 @@ Shader "Custom/TessellationTerrain"
                 #endif
             }
             
+            //combina testes de fora do frustum e backface culling
             bool ShouldClipPatch(float4 p0PositionCS, float4 p1PositionCS, float4 p2PositionCS)
             {
                 bool allOutside = IsPointOutOfFrustum(p0PositionCS) &&
@@ -117,20 +116,16 @@ Shader "Custom/TessellationTerrain"
                 return allOutside || ShouldBackFaceCull(p0PositionCS, p1PositionCS, p2PositionCS);
             }
             
-            // ============================================================================
-            // DEFORMATION
-            // ============================================================================
+            // calcula um comprimento de deformacao simples baseado em ruido
             float DeformationLength(float3 vertexPositionWS, float3 movementDirectionWS, float offset)
             {
-                // Simple noise-like deformation
+                //ruido simples
                 float height = sin(vertexPositionWS.x * 0.1) * cos(vertexPositionWS.z * 0.1) * 5.0;
                 float3 displacedPos = vertexPositionWS + movementDirectionWS * height;
                 return distance(vertexPositionWS, displacedPos);
             }
             
-            // ============================================================================
-            // BEZIER SURFACE CALCULATIONS
-            // ============================================================================
+            // calculos de bezier, gera pontos de controle e calcula posiçao e normal suavizadas
             float3 CalculateBezierControlPoint(float3 p0PositionWS, float3 aNormalWS, float3 p1PositionWS, float3 bNormalWS)
             {
                 float w = dot(p1PositionWS - p0PositionWS, aNormalWS);
@@ -229,9 +224,8 @@ Shader "Custom/TessellationTerrain"
                 return normalize(lerp(flatNormalWS, smoothedNormalWS, smoothing));
             }
             
-            // ============================================================================
-            // PHONG TESSELLATION (Alternative smoothing method - currently unused)
-            // ============================================================================
+
+            // phong tesselation - metodo alternativo 
             float3 PhongProjectedPosition(float3 flatPositionWS, float3 cornerPositionWS, float3 normalWS)
             {
                 return flatPositionWS - dot(flatPositionWS - cornerPositionWS, normalWS) * normalWS;
@@ -250,9 +244,7 @@ Shader "Custom/TessellationTerrain"
                 return lerp(flatPositionWS, smoothedPositionWS, smoothing);
             }
             
-            // ============================================================================
-            // TESSELLATION FACTOR CALCULATION
-            // ============================================================================
+            // calculos dos fatores de tesselaçao por aresta
             float EdgeTessellationFactor(float scale, float bias, float multiplier, 
                 float3 p0PositionWS, float4 p0PositionCS, 
                 float3 p1PositionWS, float4 p1PositionCS)
@@ -263,9 +255,7 @@ Shader "Custom/TessellationTerrain"
                 return max(1, (factor + bias) * multiplier);
             }
             
-            // ============================================================================
-            // VERTEX SHADER
-            // ============================================================================
+            // vertex shader, prepara os dados para o hull shader
             TessellationControl vert(Attributes input)
             {
                 TessellationControl output;
@@ -286,9 +276,7 @@ Shader "Custom/TessellationTerrain"
                 return output;
             }
             
-            // ============================================================================
-            // HULL SHADER
-            // ============================================================================
+            // hull shader, reenvia os pontos de controle e calcula os fatores de tesselaçao
             [domain("tri")]
             [outputcontrolpoints(3)]
             [outputtopology("triangle_cw")]
@@ -305,14 +293,14 @@ Shader "Custom/TessellationTerrain"
                 
                 TessellationFactors f = (TessellationFactors)0;
                 
-                // Frustum and backface culling
+                // calcula os fatores de tesselaçao e pontos Bezier (edge + inside), por patch
                 if (ShouldClipPatch(patch[0].positionCS, patch[1].positionCS, patch[2].positionCS))
                 {
                     f.edge[0] = f.edge[1] = f.edge[2] = f.inside = 0;
                 }
                 else
                 {
-                    // Calculate deformation multipliers (currently unused but can be applied to edges)
+                    //calcula multiplicadores de deformacao
                     float multipliers[3];
                     [unroll] for (int i = 0; i < 3; i++)
                     {
@@ -320,7 +308,7 @@ Shader "Custom/TessellationTerrain"
                         multipliers[i] = length > _TessellationDeformThreshold ? 1 : 0;
                     }
                     
-                    // Calculate edge tessellation factors
+                    //calcula fatores de tesselaçao por aresta, com base em distancia/Camara/comprimento
                     f.edge[0] = EdgeTessellationFactor(_TessellationFactor, _TessellationBias, 1,
                         patch[1].positionWS, patch[1].positionCS, patch[2].positionWS, patch[2].positionCS);
                     f.edge[1] = EdgeTessellationFactor(_TessellationFactor, _TessellationBias, 1,
@@ -329,7 +317,7 @@ Shader "Custom/TessellationTerrain"
                         patch[0].positionWS, patch[0].positionCS, patch[1].positionWS, patch[1].positionCS);
                     f.inside = (f.edge[0] + f.edge[1] + f.edge[2]) / 3.0;
                     
-                    // Calculate Bezier control points for smooth tessellation
+                    // controla pontos de controle bezier para suavizar as posiçoes e normais
                     CalculateBezierControlPoints(f.bezierPoints, 
                         patch[0].positionWS, patch[0].normalWS, 
                         patch[1].positionWS, patch[1].normalWS, 
@@ -343,9 +331,7 @@ Shader "Custom/TessellationTerrain"
                 return f;
             }
             
-            // ============================================================================
-            // DOMAIN SHADER
-            // ============================================================================
+            // domain shader, gera os vertices tesselados com posiçao e normais suavizadas
             [domain("tri")]
             Interpolators dom(
                 TessellationFactors factors, 
@@ -358,12 +344,12 @@ Shader "Custom/TessellationTerrain"
                 
                 float smoothing = _TessellationSmoothing;
                 
-                // Calculate smoothed position using Bezier surface
+                //calcula posiçao suavizada 
                 float3 positionWS = CalculateBezierPosition(
                     barycentricCoordinates, smoothing, factors.bezierPoints, 
                     patch[0].positionWS, patch[1].positionWS, patch[2].positionWS);
                 
-                // Calculate smoothed normal and tangent
+                // calcula normal e tangente suavizadas
                 float3 normalWS, tangentWS;
                 CalculateBezierNormalAndTangent(
                     barycentricCoordinates, smoothing, factors.bezierPoints,
@@ -379,16 +365,14 @@ Shader "Custom/TessellationTerrain"
                 return output;
             }
             
-            // ============================================================================
-            // FRAGMENT SHADER
-            // ============================================================================
+            //fragment shader, aplica iluminaçao basica por pixel
             half4 frag(Interpolators input) : SV_Target
             {
                 float3 normalWS = normalize(input.normalWS);
                 float3 lightDir = normalize(_MainLightPosition.xyz);
                 float NdotL = saturate(dot(normalWS, lightDir));
                 
-                // Basic diffuse lighting with ambient
+                // iluminaçao difusa simples com componente ambiental
                 half3 color = NdotL * 0.8 + 0.2;
                 
                 return half4(color, 1.0);
