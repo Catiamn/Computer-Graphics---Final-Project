@@ -6,7 +6,7 @@ RWStructuredBuffer<float3> normalsBuffer; //normais dos vertices da mesh
 RWStructuredBuffer<float3> deformedVerticesBuffer; //vertices deformados da mesh
 RWStructuredBuffer<float> maxDeformationBuffer; //deformacao maxima 
 
-//parametros de deformaçao passados pelo script DeformationController.cs
+//parametros de deformaÃ§Ã£o passados pelo script DeformationController.cs
 float _Time;
 float _Amplitude;
 float _Frequency;
@@ -14,7 +14,7 @@ float _Speed;
 float3 _DeformationCenter;
 float _Radius;
 
-//modos de deformaçao
+//modos de deformaÃ§Ã£o
 bool _IsWaving; //efeito tipo liquidos/ondas
 bool _IsCloth; //efeito tipo tecido (empurra para fora)
 bool _IsDigging; //efeito tipo escavar (puxa para dentro)
@@ -26,11 +26,11 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     //indice dos vertices procesados neste thread
     uint idx = id.x;
     
-    //lê os dados dos buffers
+    //lÃª os dados dos buffers
     float3 originalVertex = verticesBuffer[idx];
     float3 normal = normalsBuffer[idx];
     
-    //lê a deformacao maxima atual (pode ser 0 no inicio)
+    //lÃª a deformacao maxima atual (pode ser 0 no inicio)
     float currentMaxDeformation = maxDeformationBuffer[idx];
     
     // distancia do vertice ao centro da deformacao
@@ -60,37 +60,37 @@ void CSMain(uint3 id : SV_DispatchThreadID)
         
         //para os outros modos, calculamos a deformacao potencial
         float potentialDeformation = _Amplitude * falloff;
-        //só atualiza se for maior que a deformacao maxima atual
+        //sÃ³ atualiza se for maior que a deformacao maxima atual
         if (abs(potentialDeformation) > abs(currentMaxDeformation))
         {
             //atualiza a deformacao maxima atual
             currentMaxDeformation = potentialDeformation;
         }
     
-     // efeito de tecido (empurra vertices para fora)
-    if (_IsCloth)
-    {
-        //aplica a deformacao
-        float3 deformation = normal * _Amplitude * falloff;
+        // efeito de tecido (empurra vertices para fora)
+        if (_IsCloth)
+        {
+            //aplica a deformacao
+            float3 deformation = normal * _Amplitude * falloff;
 
-        //armazena a deformacao maxima atingida
-        deformedVerticesBuffer[idx] = originalVertex + abs(deformation);
-    }
+            //armazena a deformacao maxima atingida
+            deformedVerticesBuffer[idx] = originalVertex + abs(deformation);
+        }
         // efeito de escavar (puxa vertices para dentro)
-    else if (_IsDigging)
-    {
-        //guarda a maxima deformacao 
-        maxDeformationBuffer[idx] = currentMaxDeformation;
-        //aplica a deformacao
-        deformedVerticesBuffer[idx] = originalVertex + normal * currentMaxDeformation;
-    }
+        else if (_IsDigging)
+        {
+            //guarda a maxima deformacao 
+            maxDeformationBuffer[idx] = currentMaxDeformation;
+            //aplica a deformacao
+            deformedVerticesBuffer[idx] = originalVertex + normal * currentMaxDeformation;
+        }
         //modo default (sem efeitos)
-    else
-    {
-        //guarda a deformacao negativa
-        maxDeformationBuffer[idx] = -abs(currentMaxDeformation);
-        //aplica a deformacao
-        deformedVerticesBuffer[idx] = originalVertex + normal * -abs(currentMaxDeformation);
+        else
+        {
+            //guarda a deformacao negativa
+            maxDeformationBuffer[idx] = -abs(currentMaxDeformation);
+            //aplica a deformacao
+            deformedVerticesBuffer[idx] = originalVertex + normal * -abs(currentMaxDeformation);
+        }
     }
-}
 }
