@@ -62,7 +62,7 @@ A nossa lógica de pensamento começou com o objetivo de distorcer os vertices,
 para isso utilizamos um *compute shader*. Que é responsável por puxar os vertices para baixo ou para cima.
 Depois desse shader, decidimos que tinhamos de ter algum tipo de textura para a neve,
 que iria mudar as cores, escurecendo as zonas onde a neve iria ser deformada,
-e iria criar também diversidade na textura. Para isso aplicamos um Perlin Noise num texture shader 
+e iria criar também diversidade na textura. Para isso aplicamos um Perlin Noise num *texture shader* 
 para criar as tais irregularidades necessárias. Essa textura iria ser aplicada depois do *compute shader*, e seria tileable.
 
 Por fim adicionamos um *tessellation shader*, que irá ser juntado com o *texture shader*,
@@ -72,8 +72,9 @@ Tendo em conta tudo isto acabamos com quatro scripts e três shaders.
 
 ## Scripts e Shaders
 
-O processo começa na criação do terreno atraves do script *PlaneMeshGen*, que é reponsável por gerar a mesh base,
+O processo era para começar na criação do terreno atraves do script *PlaneMeshGen*, que seria reponsável por gerar a mesh base,
 definindo os *UVS*, o *pivot* e a densidade inicial dos vertices e da mesh. 
+Porém não conseguimos com que ele seja funcional, então acabamos por criar uma mesh manualmente no Unity com a densidade necessária.
 
 De seguida, o script *DeformationController* é responsável por recolher as informações da mesh, como os vertices e dimensões, e comunica-las para o GPU e para o *MeshDeformation* *compute shader*.
 É também neste script que definimos os parametros de deformação, como o raio e os limites máximos e mínimos.
@@ -104,7 +105,7 @@ Nós também queriamos ter só aplicado o *tessellation* só nas zonas deformadas, d
 Porém para isso teriamos de estar a modificar o *compute shader* para identificar essas zonas e visto que o *tessellation shader* é aplicado depois do *compute shader*, não coneguindo identificar os vertices que precisamo de detalhe,
 ele só vê a geometria da mesh depois de ser modificada.
 
-
+Também mudariamos o script *PlaneMeshGen* para que ele fosse funcional, de forma a criar a mesh base automaticamente, em vez de termos de criar manualmente no Unity.
 
 ---
 
@@ -121,13 +122,23 @@ De forma geral, o projeto conseguiu atingir os seus objetivos iniciais, demostra
 
 ---
 ## Tutoriais e referências que ajudaram na implementação do projeto
-https://www.youtube.com/watch?v=bT0D1uI_RNI
-https://youtube.com/shorts/ub_TUpg63Jc?si=5xTkDRK9pof3RiTv
+https://www.youtube.com/watch?v=bT0D1uI_RNI - Interactive Snow Compute Shader - Unity
+
+https://youtube.com/shorts/ub_TUpg63Jc?si=5xTkDRK9pof3RiTv - Snow Tracks Shorts - Unity
+
+https://www.youtube.com/playlist?list=PL3POsQzaCw53KM74XVRXv2xyesLjngfbG - Snow Tracks PLaylist - Unity 
+
+https://www.youtube.com/watch?v=z7kQpUZXXhw - Tracks in Snow - Unity
 
 
 
 ## Fontes
-https://dl.acm.org/doi/pdf/10.1145/3402942.3402995
-https://www.diva-portal.org/smash/get/diva2:642292/FULLTEXT01.pdf
-https://diglib.eg.org/server/api/core/bitstreams/63c4eb5f-e09c-4cc7-8a12-d96f42a4cf9f/content
+https://dl.acm.org/doi/pdf/10.1145/3402942.3402995 - Real-time Interactive Snow Simulation using Compute Shaders in
+Digital Environments
+
+https://www.diva-portal.org/smash/get/diva2:642292/FULLTEXT01.pdf - In-game Interaction with a
+snowy landscape
+
+https://diglib.eg.org/server/api/core/bitstreams/63c4eb5f-e09c-4cc7-8a12-d96f42a4cf9f/content - Snow and Ice Animation Methods in Computer Graphics
+
 
