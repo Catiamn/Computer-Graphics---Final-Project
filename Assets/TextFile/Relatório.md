@@ -122,6 +122,7 @@ De forma geral, o projeto conseguiu atingir os seus objetivos iniciais, demostra
 
 ---
 ## Tutoriais e referências que ajudaram na implementação do projeto
+
 https://www.youtube.com/watch?v=bT0D1uI_RNI - Interactive Snow Compute Shader - Unity
 
 https://youtube.com/shorts/ub_TUpg63Jc?si=5xTkDRK9pof3RiTv - Snow Tracks Shorts - Unity
